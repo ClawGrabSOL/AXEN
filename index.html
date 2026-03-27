@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Axen — Private Memecoin Trading Group</title>
+<link rel="icon" type="image/png" href="assets/logo.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#5656E6;
+  --bg2:#4545C8;
+  --bg3:#3838AA;
+  --text:#fff;
+  --dim:rgba(255,255,255,.55);
+  --faint:rgba(255,255,255,.12);
+  --accent:#00F5B0;
+  --accent2:#00C48C;
+  --r:10px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  cursor:none;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{cursor:none}
+
+/* ═══════════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════════ */
+#cursor-dot{
+  position:fixed;width:8px;height:8px;border-radius:50%;
+  background:var(--accent);pointer-events:none;z-index:10000;
+  transform:translate(-50%,-50%);transition:transform .1s,opacity .2s;
+  mix-blend-mode:screen;
+}
+#cursor-ring{
+  position:fixed;width:36px;height:36px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.3);pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:width .25s var(--ease),height .25s var(--ease),
+             border-color .25s,opacity .2s;
+}
+body:hover #cursor-dot{opacity:1}
+body.cursor-hover #cursor-ring{width:56px;height:56px;border-color:rgba(0,245,176,.4)}
+@media(hover:none){#cursor-dot,#cursor-ring{display:none}body{cursor:auto}button{cursor:pointer}}
+
+/* ═══════════════════════════════════════════
+   SCROLL PROGRESS
+═══════════════════════════════════════════ */
+#progress{
+  position:fixed;top:0;left:0;right:0;height:2px;z-index:200;
+  background:linear-gradient(90deg,var(--accent),#7B73FF);
+  transform-origin:left;transform:scaleX(0);
+  transition:transform .1s linear;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATED BACKGROUND
+═══════════════════════════════════════════ */
+.bg-orb{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+  filter:blur(120px);opacity:.25;
+}
+#orb1{width:700px;height:700px;background:#4040FF;top:-200px;right:-100px;animation:orb1 14s ease-in-out infinite alternate}
+#orb2{width:500px;height:500px;background:#00A878;bottom:-150px;left:-100px;animation:orb2 18s ease-in-out infinite alternate}
+@keyframes orb1{from{transform:translate(0,0) scale(1)}to{transform:translate(-80px,60px) scale(1.15)}}
+@keyframes orb2{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,-40px) scale(1.1)}}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 6%;
+  transition:background .4s,padding .3s,backdrop-filter .4s;
+}
+nav.scrolled{
+  background:rgba(69,69,200,.75);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--faint);
+  padding:14px 6%;
+}
+.n-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.95rem;letter-spacing:.05em}
+.n-logo img{width:30px;border-radius:7px;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.n-links{display:flex;gap:30px}
+.n-links a{font-size:.82rem;color:var(--dim);transition:color .2s;font-weight:500;position:relative}
+.n-links a::after{content:'';position:absolute;bottom:-3px;left:0;right:0;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .25s var(--ease)}
+.n-links a:hover{color:#fff}
+.n-links a:hover::after{transform:scaleX(1)}
+.n-cta{
+  font-size:.8rem;font-weight:700;color:#fff;
+  border:1.5px solid var(--faint);padding:9px 22px;
+  border-radius:99px;transition:border-color .25s,background .25s,transform .2s;
+  position:relative;overflow:hidden;
+}
+.n-cta::before{
+  content:'';position:absolute;inset:0;background:rgba(255,255,255,.06);
+  transform:translateX(-100%);transition:transform .3s var(--ease);
+}
+.n-cta:hover{border-color:rgba(255,255,255,.45);transform:translateY(-1px)}
+.n-cta:hover::before{transform:translateX(0)}
+.hbg{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hbg span{width:20px;height:1.5px;background:#fff;display:block;border-radius:99px;transition:.3s}
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════ */
+.wrap{max-width:1060px;margin:0 auto;padding:0 6%;position:relative;z-index:2}
+hr.dim{border:none;border-top:1px solid var(--faint);position:relative;z-index:2}
+.sec{padding:110px 0;position:relative;z-index:2}
+.sec-sm{padding:80px 0;position:relative;z-index:2}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:60px}
+.col-head{font-size:clamp(1.9rem,3.5vw,2.9rem);font-weight:800;line-height:1.1;letter-spacing:-.03em}
+.col-head i{font-style:italic;font-weight:300;color:var(--dim)}
+.col-body p{font-size:.95rem;color:var(--dim);line-height:1.8}
+.col-body p+p{margin-top:14px}
+
+/* ═══════════════════════════════════════════
+   FADE IN
+═══════════════════════════════════════════ */
+.fade{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.fade.in{opacity:1;transform:none}
+.fade-left{opacity:0;transform:translateX(-22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.fade-left.in{opacity:1;transform:none}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;padding:130px 6% 90px;
+  position:relative;z-index:2;
+}
+.hero-inner{max-width:1060px;margin:0 auto;width:100%}
+.hero-label{
+  font-size:.7rem;font-weight:700;letter-spacing:.16em;
+  color:var(--dim);text-transform:uppercase;margin-bottom:36px;
+  display:flex;align-items:center;gap:10px;
+}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;
+  animation:livepulse 2s ease-in-out infinite;
+}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(0,245,176,.4)}50%{box-shadow:0 0 0 6px rgba(0,245,176,0)}}
+
+.hero h1{
+  font-size:clamp(3.2rem,7.5vw,7rem);
+  font-weight:900;line-height:1.01;letter-spacing:-.04em;
+  max-width:900px;
+}
+.hero h1 em{font-style:italic;font-weight:300;color:rgba(255,255,255,.65)}
+
+.hero-stats{
+  margin-top:72px;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid var(--faint);
+}
+.h-stat{
+  padding:28px 40px 28px 0;
+  border-right:1px solid var(--faint);
+}
+.h-stat:last-child{border-right:none;padding-left:40px;padding-right:0}
+.h-stat:nth-child(2){padding-left:40px}
+.h-stat-val{
+  font-size:clamp(2rem,4vw,3.2rem);font-weight:900;
+  letter-spacing:-.03em;line-height:1;color:var(--accent);
+  font-variant-numeric:tabular-nums;
+}
+.h-stat-lbl{font-size:.75rem;color:var(--dim);margin-top:7px;line-height:1.4;letter-spacing:.01em}
+
+.hero-cta{
+  margin-top:44px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;color:var(--bg);
+  font-weight:800;font-size:.88rem;letter-spacing:.01em;
+  padding:14px 30px;border-radius:99px;border:none;
+  transition:transform .25s var(--ease),box-shadow .25s,opacity .2s;
+  position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:rgba(0,0,0,.05);
+  transform:translateY(100%);transition:transform .3s var(--ease);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,0,0,.25)}
+.btn-primary:hover::before{transform:translateY(0)}
+.btn-primary .arrow{transition:transform .25s var(--ease);display:inline-block}
+.btn-primary:hover .arrow{transform:translateX(4px)}
+.btn-text{
+  font-size:.84rem;color:var(--dim);font-weight:500;
+  border-bottom:1px solid var(--faint);
+  transition:color .2s,border-color .2s;padding-bottom:1px;
+}
+.btn-text:hover{color:#fff;border-color:rgba(255,255,255,.5)}
+
+/* ═══════════════════════════════════════════
+   RESULTS
+═══════════════════════════════════════════ */
+.big-num{font-size:clamp(4rem,9vw,8rem);font-weight:900;letter-spacing:-.05em;line-height:1;color:var(--accent)}
+.big-lbl{font-size:.78rem;color:var(--dim);margin-top:8px;letter-spacing:.04em}
+.results-text{margin-top:32px}
+.results-text p{font-size:.93rem;color:var(--dim);line-height:1.8}
+.results-text p+p{margin-top:14px}
+.results-text a{color:#fff;border-bottom:1px solid var(--faint);transition:border-color .2s}
+.results-text a:hover{border-color:rgba(255,255,255,.5)}
+.results-imgs{display:flex;flex-direction:column;gap:16px}
+.r-img{
+  border-radius:var(--r);overflow:hidden;border:1px solid var(--faint);
+  cursor:pointer;position:relative;
+  transition:transform .35s var(--ease),box-shadow .35s,border-color .25s;
+}
+.r-img::after{
+  content:'Expand ↗';position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:700;letter-spacing:.08em;
+  background:rgba(56,56,170,.7);color:#fff;
+  opacity:0;transition:opacity .25s;
+  backdrop-filter:blur(4px);
+}
+.r-img:hover{transform:scale(1.025) translateY(-3px);box-shadow:0 24px 60px rgba(0,0,0,.4);border-color:rgba(255,255,255,.25)}
+.r-img:hover::after{opacity:1}
+.r-img img{width:100%;display:block}
+.r-cap{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(to top,rgba(0,0,0,.7),transparent);
+  padding:20px 14px 12px;font-size:.75rem;font-weight:700;
+  color:var(--accent);letter-spacing:.05em;
+}
+
+/* ═══════════════════════════════════════════
+   FACT TABLE
+═══════════════════════════════════════════ */
+.fact-list{margin-top:52px}
+.fact{
+  display:grid;grid-template-columns:150px 1fr;
+  gap:24px;padding:20px 0;border-top:1px solid var(--faint);
+  transition:background .2s;
+}
+.fact:last-child{border-bottom:1px solid var(--faint)}
+.fact-k{font-size:.75rem;color:var(--dim);font-weight:600;padding-top:2px;letter-spacing:.02em}
+.fact-v{font-size:.9rem;color:#fff;line-height:1.65}
+.fact-v strong{font-weight:700;color:var(--accent)}
+
+/* ═══════════════════════════════════════════
+   WHAT'S INSIDE
+═══════════════════════════════════════════ */
+.get-item{
+  display:grid;grid-template-columns:44px 1fr;
+  gap:20px;padding:28px 0;border-top:1px solid var(--faint);
+  transition:background .2s;
+}
+.get-item:last-child{border-bottom:1px solid var(--faint)}
+.get-n{font-size:.7rem;font-weight:700;color:var(--dim);letter-spacing:.08em;padding-top:3px}
+.get-body h4{font-size:.93rem;font-weight:700;margin-bottom:6px}
+.get-body p{font-size:.86rem;color:var(--dim);line-height:1.7}
+
+/* ═══════════════════════════════════════════
+   WHO IT'S FOR
+═══════════════════════════════════════════ */
+.who-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:52px;border:1px solid var(--faint);border-radius:var(--r);overflow:hidden}
+.who-card{
+  background:rgba(0,0,0,.15);padding:32px 28px;
+  transition:background .25s;
+}
+.who-card:hover{background:rgba(0,0,0,.28)}
+.who-card h3{font-size:.92rem;font-weight:700;margin-bottom:10px;line-height:1.3}
+.who-card p{font-size:.86rem;color:var(--dim);line-height:1.7}
+
+/* ═══════════════════════════════════════════
+   APPLY + PAYMENT
+═══════════════════════════════════════════ */
+.apply-header{margin-bottom:64px}
+.apply-header h2{font-size:clamp(2.2rem,5vw,4rem);font-weight:900;letter-spacing:-.04em;line-height:1.05}
+.apply-header h2 em{font-style:italic;font-weight:300;color:var(--dim)}
+.apply-header p{font-size:.95rem;color:var(--dim);margin-top:14px;max-width:560px;line-height:1.75}
+
+/* step progress */
+.step-progress{
+  display:flex;align-items:center;gap:0;margin-bottom:52px;
+}
+.sp-item{display:flex;align-items:center;gap:12px;flex:1}
+.sp-item:last-child{flex:none}
+.sp-num{
+  width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--faint);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;color:var(--dim);flex-shrink:0;
+  transition:background .4s,border-color .4s,color .4s;
+}
+.sp-item.active .sp-num{background:var(--accent);border-color:var(--accent);color:#000}
+.sp-item.done .sp-num{background:rgba(0,245,176,.15);border-color:rgba(0,245,176,.4);color:var(--accent)}
+.sp-label{font-size:.75rem;color:var(--dim);font-weight:600;white-space:nowrap;transition:color .3s}
+.sp-item.active .sp-label{color:#fff}
+.sp-line{flex:1;height:1px;background:var(--faint);margin:0 16px;transition:background .4s}
+.sp-item.done + .sp-item .sp-line,
+.sp-item.active + .sp-item .sp-line{background:rgba(0,245,176,.3)}
+
+.apply-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+
+/* FORM */
+.form-card{
+  background:rgba(0,0,0,.2);border:1px solid var(--faint);
+  border-radius:16px;padding:36px;
+  transition:border-color .3s;
+}
+.form-card:focus-within{border-color:rgba(255,255,255,.22)}
+.form-card h3{font-size:1rem;font-weight:700;margin-bottom:4px}
+.form-card .fc-sub{font-size:.83rem;color:var(--dim);margin-bottom:28px;line-height:1.5}
+
+.fg{position:relative;margin-bottom:14px}
+.fg label{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:.82rem;color:var(--dim);transition:.2s var(--ease);
+  pointer-events:none;font-weight:500;
+}
+.fg.has-val label,.fg input:focus~label,.fg select:focus~label{
+  top:10px;font-size:.65rem;letter-spacing:.06em;color:rgba(255,255,255,.4);
+  text-transform:uppercase;
+}
+.fg input,.fg select{
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid var(--faint);border-radius:8px;
+  color:#fff;font-family:'Inter',sans-serif;font-size:.9rem;
+  padding:24px 14px 10px;outline:none;
+  transition:border-color .25s,background .25s;
+  -webkit-appearance:none;appearance:none;
+  cursor:none;
+}
+.fg input:focus,.fg select:focus{
+  border-color:rgba(255,255,255,.35);
+  background:rgba(255,255,255,.07);
+}
+.fg.error input,.fg.error select{border-color:rgba(255,100,100,.5)}
+.fg .err-msg{display:none;font-size:.72rem;color:#FF8080;margin-top:5px;padding-left:2px}
+.fg.error .err-msg{display:block}
+.fg select option{background:#3838AA;color:#fff}
+/* select arrow */
+.fg select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+
+.form-note{font-size:.75rem;color:var(--dim);margin-top:10px;line-height:1.55;opacity:.7}
+.btn-submit{
+  width:100%;margin-top:20px;
+  background:#fff;color:var(--bg);
+  font-weight:800;font-size:.9rem;letter-spacing:.01em;
+  padding:15px;border-radius:8px;border:none;
+  font-family:'Inter',sans-serif;
+  transition:transform .25s var(--ease),box-shadow .25s,opacity .2s;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.btn-submit:active{transform:scale(.99)}
+.btn-submit .arrow{transition:transform .25s var(--ease)}
+.btn-submit:hover .arrow{transform:translateX(4px)}
+
+.form-success{
+  display:none;padding:20px;
+  background:rgba(0,245,176,.08);border:1px solid rgba(0,245,176,.25);
+  border-radius:8px;margin-top:16px;
+  font-size:.88rem;line-height:1.65;color:var(--accent);
+}
+.form-success strong{font-weight:700}
+
+/* PAYMENT CARD */
+.pay-card{
+  background:rgba(0,0,0,.2);border:1px solid var(--faint);
+  border-radius:16px;padding:36px;
+}
+.pay-card h3{font-size:1rem;font-weight:700;margin-bottom:4px}
+.pay-card .pc-sub{font-size:.83rem;color:var(--dim);margin-bottom:24px;line-height:1.5}
+.pay-amount{font-size:3.2rem;font-weight:900;letter-spacing:-.04em;color:var(--accent);line-height:1}
+.pay-amount-note{font-size:.75rem;color:var(--dim);margin-top:5px;margin-bottom:28px}
+
+.pay-steps{display:flex;flex-direction:column;gap:0;margin-bottom:28px}
+.ps-item{
+  display:grid;grid-template-columns:28px 1fr;
+  gap:14px;padding:15px 0;border-top:1px solid var(--faint);
+}
+.ps-item:last-child{border-bottom:1px solid var(--faint)}
+.ps-n{font-size:.68rem;font-weight:700;color:var(--dim);letter-spacing:.06em;padding-top:2px}
+.ps-body h4{font-size:.86rem;font-weight:700;margin-bottom:4px}
+.ps-body p{font-size:.8rem;color:var(--dim);line-height:1.6}
+.ps-body a{color:#fff;border-bottom:1px solid var(--faint);transition:border-color .2s}
+.ps-body a:hover{border-color:rgba(255,255,255,.5)}
+
+/* wallet */
+.wallet-box{
+  background:rgba(0,0,0,.3);border:1px solid rgba(0,245,176,.15);
+  border-radius:10px;padding:18px;margin-bottom:16px;
+  transition:border-color .25s;
+}
+.wallet-box:hover{border-color:rgba(0,245,176,.3)}
+.wallet-lbl{
+  font-size:.65rem;font-weight:700;letter-spacing:.12em;
+  color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:10px;
+}
+.wallet-row{display:flex;align-items:flex-start;gap:10px}
+.wallet-addr{
+  font-family:'SF Mono','Fira Mono','Courier New',monospace;
+  font-size:.73rem;color:var(--accent);word-break:break-all;flex:1;line-height:1.6;
+}
+.copy-btn{
+  flex-shrink:0;background:rgba(0,245,176,.12);
+  border:1px solid rgba(0,245,176,.25);color:var(--accent);
+  font-size:.72rem;font-weight:700;padding:7px 14px;
+  border-radius:6px;transition:background .2s,transform .2s;
+  font-family:'Inter',sans-serif;white-space:nowrap;letter-spacing:.04em;
+  position:relative;overflow:hidden;
+}
+.copy-btn:hover{background:rgba(0,245,176,.2);transform:scale(1.02)}
+.copy-btn.copied{background:rgba(0,245,176,.2);border-color:var(--accent)}
+
+/* toast */
+#toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.85);backdrop-filter:blur(12px);
+  color:#fff;font-size:.82rem;font-weight:600;letter-spacing:.02em;
+  padding:12px 24px;border-radius:99px;z-index:5000;
+  border:1px solid var(--faint);
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s var(--ease);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .t-accent{color:var(--accent)}
+
+/* proof links */
+.proof-links{display:flex;flex-direction:column;gap:10px}
+.proof-link{
+  display:flex;align-items:center;gap:10px;
+  font-size:.83rem;padding:12px 14px;border-radius:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--faint);
+  transition:background .2s,border-color .2s;
+}
+.proof-link:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22)}
+.proof-link .pl-badge{
+  font-size:.65rem;font-weight:800;letter-spacing:.1em;
+  padding:4px 9px;border-radius:4px;text-transform:uppercase;flex-shrink:0;
+}
+.pl-badge.ig{background:linear-gradient(135deg,#833ab4,#fd1d1d);color:#fff}
+.pl-badge.tg{background:#2AABEE;color:#fff}
+.pl-badge.scan{background:rgba(255,255,255,.1);color:var(--dim)}
+.proof-link .pl-text{color:var(--dim);flex:1}
+.proof-link .pl-text a{color:#fff;font-weight:600}
+.proof-link .pl-arrow{color:var(--dim);font-size:.8rem;transition:transform .2s}
+.proof-link:hover .pl-arrow{transform:translateX(3px)}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer{
+  border-top:1px solid var(--faint);padding:32px 6%;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;position:relative;z-index:2;
+}
+.f-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.9rem}
+.f-logo img{width:26px;border-radius:6px}
+.f-links{display:flex;gap:20px}
+.f-links a{font-size:.78rem;color:var(--dim);transition:color .2s}
+.f-links a:hover{color:#fff}
+.f-disc{font-size:.7rem;color:rgba(255,255,255,.2);max-width:360px;line-height:1.55;text-align:right}
+
+/* ═══════════════════════════════════════════
+   LIGHTBOX
+═══════════════════════════════════════════ */
+.lb{
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(16px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.lb.open{opacity:1;pointer-events:all}
+.lb-inner{
+  max-width:680px;width:92%;border-radius:12px;overflow:hidden;
+  position:relative;border:1px solid rgba(255,255,255,.1);
+  transform:scale(.94) translateY(12px);transition:transform .35s var(--ease);
+  box-shadow:0 40px 100px rgba(0,0,0,.6);
+}
+.lb.open .lb-inner{transform:scale(1) translateY(0)}
+.lb-inner img{width:100%;display:block}
+.lb-close{
+  position:absolute;top:12px;right:12px;
+  background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.1);
+  color:#fff;width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;transition:background .2s;
+}
+.lb-close:hover{background:rgba(255,255,255,.12)}
+
+/* ═══════════════════════════════════════════
+   MOBILE
+═══════════════════════════════════════════ */
+@media(max-width:860px){
+  .n-links{display:none}
+  .n-links.open{
+    display:flex;flex-direction:column;gap:16px;
+    position:absolute;top:100%;left:0;right:0;
+    background:rgba(56,56,170,.97);padding:20px 6%;
+    border-bottom:1px solid var(--faint);
+  }
+  .hbg{display:flex}
+  .hero h1{font-size:clamp(2.6rem,10vw,4.5rem)}
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .h-stat:nth-child(3){border-right:none;padding-left:0;border-top:1px solid var(--faint)}
+  .two-col{grid-template-columns:1fr;gap:36px}
+  .apply-grid{grid-template-columns:1fr}
+  .who-grid{grid-template-columns:1fr}
+  .step-progress{flex-wrap:wrap;gap:12px}
+  .sp-line{display:none}
+  footer{flex-direction:column;align-items:flex-start}
+  .f-disc{text-align:left}
+  .fact{grid-template-columns:120px 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+
+<!-- SCROLL PROGRESS -->
+<div id="progress"></div>
+
+<!-- BACKGROUND ORBS -->
+<div class="bg-orb" id="orb1"></div>
+<div class="bg-orb" id="orb2"></div>
+
+<!-- TOAST -->
+<div id="toast">Address <span class="t-accent">copied</span> to clipboard ✓</div>
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb">
+  <div class="lb-inner">
+    <button class="lb-close" onclick="closeLB()">✕</button>
+    <img id="lb-img" src="" alt=""/>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="n-logo">
+    <img src="assets/logo.png" alt="Axen"/>Axen
+  </div>
+  <div class="n-links" id="nl">
+    <a href="#results">Results</a>
+    <a href="#why">Why Memecoins</a>
+    <a href="#inside">What's Inside</a>
+    <a href="#who">Who It's For</a>
+    <a href="#apply">Apply</a>
+  </div>
+  <a href="#apply" class="n-cta">Apply Now</a>
+  <div class="hbg" onclick="toggleNav()" id="hbg">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- ════════════ HERO ════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-label fade">
+      <span class="live-dot"></span>
+      Private Discord &nbsp;·&nbsp; Limited Spots
+    </div>
+    <h1 class="fade" style="transition-delay:.08s">
+      Memecoin trading.<br/><em>Serious results.</em>
+    </h1>
+    <div class="hero-stats fade" style="transition-delay:.18s">
+      <div class="h-stat">
+        <div class="h-stat-val" data-count="42000">$0</div>
+        <div class="h-stat-lbl">Best single month</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-val" data-count="100" data-suffix="%+">0%+</div>
+        <div class="h-stat-lbl">ROI that month</div>
+      </div>
+      <div class="h-stat">
+        <div class="h-stat-val">$3–5K</div>
+        <div class="h-stat-lbl">What members avg per month</div>
+      </div>
+    </div>
+    <div class="hero-cta fade" style="transition-delay:.28s">
+      <a href="#apply" class="btn-primary">Apply to Join <span class="arrow">→</span></a>
+      <a href="#results" class="btn-text">See the results</a>
+    </div>
+  </div>
+</section>
+
+<hr class="dim"/>
+
+<!-- ════════════ RESULTS ════════════ -->
+<section class="sec" id="results">
+  <div class="wrap">
+    <div class="two-col" style="align-items:start;gap:72px">
+      <div>
+        <div class="big-num fade">$42K</div>
+        <div class="big-lbl fade" style="transition-delay:.05s">Best recorded month</div>
+        <div class="results-text fade" style="transition-delay:.1s">
+          <p>These are real results pulled from Axiom Pro and Terminal — verified on-chain. Nothing is edited or staged. The full history is available before you spend a dollar.</p>
+          <p>Recent months include <strong style="color:#fff">+$19.8K at 100% ROI</strong> in March 2026, with multiple documented accounts showing consistent performance across varying market conditions.</p>
+          <p style="margin-top:20px">
+            <a href="https://www.instagram.com/weqx" target="_blank" rel="noopener">Request the full history → @weqx</a>
+          </p>
+        </div>
+      </div>
+      <div class="results-imgs fade" style="transition-delay:.12s">
+        <div class="r-img" onclick="openLB('assets/pnl1.jpg')">
+          <img src="assets/pnl1.jpg" alt="January 2026 results"/>
+          <div class="r-cap">Jan 2026 · Multiple accounts</div>
+        </div>
+        <div class="r-img" onclick="openLB('assets/pnl2.png')">
+          <img src="assets/pnl2.png" alt="March 2026 Axiom Pro"/>
+          <div class="r-cap">Mar 2026 · Axiom Pro · +$19.8K · +100% ROI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="dim"/>
+
+<!-- ════════════ WHY ════════════ -->
+<section class="sec" id="why">
+  <div class="wrap">
+    <div class="two-col" style="align-items:start">
+      <div>
+        <h2 class="col-head fade">Memecoins.<br/><em><i>Why they work.</i></em></h2>
+      </div>
+      <div class="col-body fade" style="transition-delay:.1s">
+        <p>No other market offers this kind of asymmetric upside. Stocks return 10% a year. A single memecoin setup — entered at the right time — can return that in a session.</p>
+        <p>The edge isn't finding the tokens. Everyone finds the tokens. The edge is being positioned hours before the move, with a defined target and a clear exit. That's what Axen is built around.</p>
+        <p>Typical risk/reward on calls inside Axen: <strong style="color:#fff">5:1 to 30:1.</strong> With correct position sizing, a handful of clean wins a month is enough to generate $3–5K consistently — even part-time.</p>
+      </div>
+    </div>
+    <div class="fact-list">
+      <div class="fact fade" style="transition-delay:.05s">
+        <span class="fact-k">Risk / Reward</span>
+        <span class="fact-v"><strong>5:1 to 30:1+</strong> on typical setups. Entry timing separates a 2x from a 20x — Axen members are consistently in before the market catches on.</span>
+      </div>
+      <div class="fact fade" style="transition-delay:.1s">
+        <span class="fact-k">Volatility</span>
+        <span class="fact-v">Memecoins move 50–400% in a single session. That volatility is what makes large returns possible on short timeframes. Risk management is built into every call.</span>
+      </div>
+      <div class="fact fade" style="transition-delay:.15s">
+        <span class="fact-k">Time required</span>
+        <span class="fact-v">Under 2 hours a day for members following the calls. Entries are defined, targets are set, exits are called in real time. You don't need to watch charts all day.</span>
+      </div>
+      <div class="fact fade" style="transition-delay:.2s">
+        <span class="fact-k">Income potential</span>
+        <span class="fact-v"><strong>$3,000–$5,000/month</strong> is the realistic range for part-time members. Full-time traders working larger capital have no defined ceiling.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="dim"/>
+
+<!-- ════════════ WHAT'S INSIDE ════════════ -->
+<section class="sec-sm" id="inside">
+  <div class="wrap">
+    <div class="two-col" style="align-items:start;gap:80px">
+      <div>
+        <h2 class="col-head fade">What's inside<br/><i>the group.</i></h2>
+      </div>
+      <div class="fade" style="transition-delay:.1s">
+        <div class="get-item">
+          <span class="get-n">01</span>
+          <div class="get-body">
+            <h4>Early token calls with defined entries</h4>
+            <p>Before these tokens move on crypto Twitter, members have the entry, the rationale, and the target. Earlier in equals better risk/reward — that's the foundation of every call.</p>
+          </div>
+        </div>
+        <div class="get-item">
+          <span class="get-n">02</span>
+          <div class="get-body">
+            <h4>Active trade management — entry through exit</h4>
+            <p>Calls don't stop at the entry. Profit targets and stop levels are communicated live. You always know where you stand and when to act.</p>
+          </div>
+        </div>
+        <div class="get-item">
+          <span class="get-n">03</span>
+          <div class="get-body">
+            <h4>On-chain intelligence and real-time reads</h4>
+            <p>Wallet tracking, volume shifts, sentiment signals — when something actionable is developing, the group is the first to know. No delays.</p>
+          </div>
+        </div>
+        <div class="get-item">
+          <span class="get-n">04</span>
+          <div class="get-body">
+            <h4>A focused, high-signal community</h4>
+            <p>Kept intentionally small. Less noise, better information, more accountability. Everyone inside is here to trade profitably — not to talk about trading.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="dim"/>
+
+<!-- ════════════ WHO ════════════ -->
+<section class="sec" id="who">
+  <div class="wrap">
+    <div class="two-col" style="margin-bottom:52px;align-items:center">
+      <div>
+        <h2 class="col-head fade">Who this<br/><i>is for.</i></h2>
+      </div>
+      <div class="col-body fade" style="transition-delay:.1s">
+        <p>Axen works for two types of people — those who want a meaningful secondary income without leaving their job, and those who want to trade professionally and need the right environment to do it consistently.</p>
+      </div>
+    </div>
+    <div class="who-grid fade" style="transition-delay:.12s">
+      <div class="who-card">
+        <h3>You have a full-time job</h3>
+        <p>You're not watching charts all day — and you don't need to. Follow the calls, manage positions in an hour or two, and generate $3–5K a month alongside your salary. Members are doing this right now.</p>
+      </div>
+      <div class="who-card">
+        <h3>You want to trade professionally</h3>
+        <p>High-conviction setups, early access, and a disciplined approach to risk. If full-time trading is the goal, this is the environment built to make that sustainable — not just occasionally profitable.</p>
+      </div>
+      <div class="who-card">
+        <h3>You're newer but committed</h3>
+        <p>Experience is not a prerequisite — commitment is. Every call includes clear reasoning. You'll build real pattern recognition over time. This is a skill, not just a signal service.</p>
+      </div>
+      <div class="who-card">
+        <h3>This is not for everyone</h3>
+        <p>There are no guaranteed returns. Memecoins are high-volatility instruments. Axen provides the timing and information — execution and discipline are entirely on you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="dim"/>
+
+<!-- ════════════ APPLY + PAYMENT ════════════ -->
+<section class="sec" id="apply">
+  <div class="wrap">
+    <div class="apply-header fade">
+      <h2>Apply &amp; <em>get access.</em></h2>
+      <p>Fill out your details, send payment in SOL, then DM proof. Once confirmed you'll be added to the private Discord — the whole process takes under 10 minutes.</p>
+    </div>
+
+    <!-- STEP PROGRESS -->
+    <div class="step-progress fade" id="step-progress" style="transition-delay:.1s">
+      <div class="sp-item active" id="sp1">
+        <div class="sp-num">1</div>
+        <div class="sp-label">Your Details</div>
+      </div>
+      <div class="sp-line"></div>
+      <div class="sp-item" id="sp2">
+        <div class="sp-num">2</div>
+        <div class="sp-label">Send Payment</div>
+      </div>
+      <div class="sp-line"></div>
+      <div class="sp-item" id="sp3">
+        <div class="sp-num">3</div>
+        <div class="sp-label">Send Proof</div>
+      </div>
+    </div>
+
+    <div class="apply-grid">
+
+      <!-- FORM -->
+      <div class="form-card fade" style="transition-delay:.15s" id="form-card">
+        <h3>Step 1 — Your details</h3>
+        <p class="fc-sub">So we know who you are before adding you to the server.</p>
+        <form id="apply-form" onsubmit="handleSubmit(event)" novalidate>
+          <div class="fg" id="fg-name">
+            <input type="text" name="name" id="f-name" required autocomplete="name"/>
+            <label for="f-name">Full Name</label>
+            <div class="err-msg">Please enter your name</div>
+          </div>
+          <div class="fg" id="fg-phone">
+            <input type="tel" name="phone" id="f-phone" required autocomplete="tel"/>
+            <label for="f-phone">Phone Number</label>
+            <div class="err-msg">Please enter a valid phone number</div>
+          </div>
+          <div class="fg" id="fg-email">
+            <input type="email" name="email" id="f-email" required autocomplete="email"/>
+            <label for="f-email">Email Address</label>
+            <div class="err-msg">Please enter a valid email</div>
+          </div>
+          <div class="fg" id="fg-handle">
+            <input type="text" name="handle" id="f-handle" required/>
+            <label for="f-handle">Discord or Telegram Username</label>
+            <div class="err-msg">Please enter your username</div>
+          </div>
+          <div class="fg" id="fg-platform">
+            <select name="platform" id="f-platform" required>
+              <option value="" disabled selected></option>
+              <option value="Discord">Discord</option>
+              <option value="Telegram">Telegram</option>
+            </select>
+            <label for="f-platform">Preferred Platform</label>
+            <div class="err-msg">Please select a platform</div>
+          </div>
+          <p class="form-note">Your information is used solely to add you to the group. Nothing is sold or shared.</p>
+          <button type="submit" class="btn-submit">Submit Details <span class="arrow">→</span></button>
+        </form>
+        <div class="form-success" id="form-success">
+          <strong>✓ Details received.</strong> Complete payment on the right, then DM proof to confirm your spot.
+        </div>
+      </div>
+
+      <!-- PAYMENT -->
+      <div class="pay-card fade" style="transition-delay:.2s">
+        <h3>Step 2 — Send payment in SOL</h3>
+        <p class="pc-sub">One-time membership fee. No subscriptions or recurring charges.</p>
+
+        <div class="pay-amount">$1,200</div>
+        <div class="pay-amount-note">Equivalent in SOL at time of transfer</div>
+
+        <div class="pay-steps">
+          <div class="ps-item">
+            <span class="ps-n">01</span>
+            <div class="ps-body">
+              <h4>Download Coinbase</h4>
+              <p>Visit <a href="https://www.coinbase.com" target="_blank" rel="noopener">coinbase.com</a> or download the Coinbase app. Create an account and complete ID verification — takes about 5 minutes.</p>
+            </div>
+          </div>
+          <div class="ps-item">
+            <span class="ps-n">02</span>
+            <div class="ps-body">
+              <h4>Buy $1,200 worth of SOL</h4>
+              <p>Search for <strong>Solana (SOL)</strong>, tap Buy, and enter $1,200. Use a debit card or bank transfer. SOL appears in your wallet instantly.</p>
+            </div>
+          </div>
+          <div class="ps-item">
+            <span class="ps-n">03</span>
+            <div class="ps-body">
+              <h4>Send SOL to the address below</h4>
+              <p>In Coinbase tap Send → paste the wallet address below → enter the full SOL amount. Double-check the address before confirming.</p>
+            </div>
+          </div>
+          <div class="ps-item">
+            <span class="ps-n">04</span>
+            <div class="ps-body">
+              <h4>DM your proof — you're in</h4>
+              <p>Screenshot the confirmed transaction and send it to <a href="https://www.instagram.com/weqx" target="_blank" rel="noopener">@weqx on IG</a> or <a href="https://t.me/fund4d" target="_blank" rel="noopener">@fund4d on Telegram</a>. You'll be added within the hour.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- WALLET -->
+        <div class="wallet-box">
+          <div class="wallet-lbl">SOL Wallet Address — Send Exactly $1,200 in SOL</div>
+          <div class="wallet-row">
+            <div class="wallet-addr" id="waddr">Hhj9w3PNBTWjv5YQwimiqudnEByj8pu2tffAFidptAQM</div>
+            <button class="copy-btn" id="cbtn" onclick="copyWallet()">Copy</button>
+          </div>
+        </div>
+
+        <!-- PROOF LINKS -->
+        <div class="proof-links">
+          <a href="https://solscan.io" target="_blank" rel="noopener" class="proof-link">
+            <span class="pl-badge scan">Solscan</span>
+            <span class="pl-text">Verify your transaction on <a href="https://solscan.io" target="_blank">solscan.io</a> — paste your TX hash to confirm</span>
+            <span class="pl-arrow">→</span>
+          </a>
+          <a href="https://www.instagram.com/weqx" target="_blank" rel="noopener" class="proof-link">
+            <span class="pl-badge ig">IG</span>
+            <span class="pl-text">Send payment proof to <strong>@weqx</strong> on Instagram</span>
+            <span class="pl-arrow">→</span>
+          </a>
+          <a href="https://t.me/fund4d" target="_blank" rel="noopener" class="proof-link">
+            <span class="pl-badge tg">TG</span>
+            <span class="pl-text">Or send payment proof to <strong>@fund4d</strong> on Telegram</span>
+            <span class="pl-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="dim"/>
+<div style="padding:48px 6%;text-align:center;position:relative;z-index:2">
+  <p style="font-size:.83rem;color:var(--dim)">Questions before applying? &nbsp;<a href="https://www.instagram.com/weqx" target="_blank" rel="noopener" style="color:#fff;border-bottom:1px solid rgba(255,255,255,.2)">@weqx on Instagram</a> &nbsp;·&nbsp; <a href="https://t.me/fund4d" target="_blank" rel="noopener" style="color:#fff;border-bottom:1px solid rgba(255,255,255,.2)">@fund4d on Telegram</a></p>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo"><img src="assets/logo.png" alt="Axen"/>Axen</div>
+  <div class="f-links">
+    <a href="#results">Results</a>
+    <a href="#why">Why Memecoins</a>
+    <a href="#who">Who It's For</a>
+    <a href="#apply">Apply</a>
+    <a href="https://www.instagram.com/weqx" target="_blank" rel="noopener">Instagram</a>
+    <a href="https://t.me/fund4d" target="_blank" rel="noopener">Telegram</a>
+  </div>
+  <div class="f-disc">Trading crypto involves substantial risk. Past results do not guarantee future performance. Not financial advice.</div>
+</footer>
+
+<script>
+/* ── CURSOR ─────────────────────────────────────── */
+const dot = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  dot.style.left=mx+'px'; dot.style.top=my+'px';
+});
+function lerp(a,b,n){return a+(b-a)*n}
+function animCursor(){
+  rx=lerp(rx,mx,.1); ry=lerp(ry,my,.1);
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+document.querySelectorAll('a,button,.r-img,.proof-link,.who-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('cursor-hover'));
+});
+
+/* ── SCROLL PROGRESS ───────────────────────────── */
+const prog = document.getElementById('progress');
+window.addEventListener('scroll',()=>{
+  const s = document.documentElement;
+  const pct = s.scrollTop/(s.scrollHeight-s.clientHeight);
+  prog.style.transform = `scaleX(${pct})`;
+  document.getElementById('nav').classList.toggle('scrolled', scrollY>40);
+});
+
+/* ── FADE OBSERVER ──────────────────────────────── */
+const fadeObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); fadeObs.unobserve(e.target); } });
+},{threshold:.1});
+document.querySelectorAll('.fade,.fade-left').forEach(el=>fadeObs.observe(el));
+
+/* ── COUNTER ANIMATION ──────────────────────────── */
+function animCount(el){
+  const target = +el.dataset.count;
+  const suffix = el.dataset.suffix || '';
+  const dur = 1800;
+  const start = performance.now();
+  function fmt(n){
+    // if no suffix (dollar amounts) → format as $XXK
+    if(!suffix && n >= 1000) return '$' + (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
+    return n.toLocaleString();
+  }
+  function tick(now){
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 4);
+    const cur = Math.floor(target * ease);
+    el.textContent = fmt(cur) + suffix;
+    if(t < 1) requestAnimationFrame(tick);
+    else el.textContent = fmt(target) + suffix;
+  }
+  requestAnimationFrame(tick);
+}
+const countObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){ animCount(e.target); countObs.unobserve(e.target); }
+  });
+}, {threshold: .5});
+document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
+
+/* ── NAV ─────────────────────────────────────────── */
+function toggleNav(){
+  const nl=document.getElementById('nl');
+  nl.classList.toggle('open');
+  const hbg=document.getElementById('hbg');
+  hbg.classList.toggle('open');
+}
+
+/* ── LIGHTBOX ───────────────────────────────────── */
+function openLB(src){
+  document.getElementById('lb-img').src=src;
+  document.getElementById('lb').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeLB(){
+  document.getElementById('lb').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.getElementById('lb').addEventListener('click',function(e){if(e.target===this)closeLB();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLB();});
+
+/* ── COPY WALLET ────────────────────────────────── */
+function copyWallet(){
+  const addr=document.getElementById('waddr').textContent.trim();
+  navigator.clipboard.writeText(addr).then(()=>{
+    const btn=document.getElementById('cbtn');
+    btn.textContent='Copied ✓'; btn.classList.add('copied');
+    showToast();
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2500);
+  });
+}
+function showToast(){
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ── FLOATING LABELS ────────────────────────────── */
+document.querySelectorAll('.fg input,.fg select').forEach(inp=>{
+  const check=()=>inp.parentElement.classList.toggle('has-val',inp.value.length>0 || inp.tagName==='SELECT'&&inp.value!=='');
+  inp.addEventListener('input',check);
+  inp.addEventListener('change',check);
+  check();
+});
+
+/* ── FORM VALIDATION + SUBMIT ───────────────────── */
+function validateField(input){
+  const fg=input.closest('.fg');
+  let ok=true;
+  if(!input.value.trim()) ok=false;
+  if(input.type==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) ok=false;
+  fg.classList.toggle('error',!ok);
+  return ok;
+}
+document.querySelectorAll('.fg input,.fg select').forEach(inp=>{
+  inp.addEventListener('blur',()=>validateField(inp));
+  inp.addEventListener('input',()=>{ if(inp.closest('.fg').classList.contains('error')) validateField(inp); });
+});
+
+function handleSubmit(e){
+  e.preventDefault();
+  const inputs=[...document.querySelectorAll('#apply-form input, #apply-form select')];
+  const valid=inputs.every(inp=>validateField(inp));
+  if(!valid){
+    const firstErr=document.querySelector('.fg.error input,.fg.error select');
+    if(firstErr) firstErr.focus();
+    return;
+  }
+  // success
+  document.getElementById('apply-form').style.display='none';
+  document.getElementById('form-success').style.display='block';
+  // update step progress
+  document.getElementById('sp1').classList.remove('active');
+  document.getElementById('sp1').classList.add('done');
+  document.getElementById('sp2').classList.add('active');
+  // scroll to payment
+  setTimeout(()=>{
+    document.querySelector('.pay-card').scrollIntoView({behavior:'smooth',block:'start'});
+  },350);
+}
+</script>
+</body>
+</html>
